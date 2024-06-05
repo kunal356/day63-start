@@ -66,8 +66,36 @@ def add():
         )
         db.session.add(new_book)
         db.session.commit()
-        return redirect(url_for('add'))
+        return redirect(url_for('home'))
     return render_template('add.html', form=form)
+
+
+@app.route("/edit", methods=["POST", "GET"])
+def edit():
+    title = request.args.get('title')
+    book_to_update = db.session.execute(db.select(Book).where(Book.title == title)).scalar()
+    form = MyForm()
+    if request.method == "GET":
+        form.title.data = book_to_update.title
+        form.author.data = book_to_update.author
+        form.rating.data = book_to_update.rating    
+    if form.validate_on_submit():
+        book_to_update.title = form.title.data
+        book_to_update.author = form.author.data
+        book_to_update.rating = form.rating.data
+        db.session.commit()
+        return redirect(url_for('home'))
+    return render_template('add.html', form=form)
+
+
+@app.route("/delete/")
+def delete():
+    title = request.args.get('title')
+    book_to_delete = db.session.execute(
+        db.select(Book).where(Book.title == title)).scalar()
+    db.session.delete(book_to_delete)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 
 if __name__ == "__main__":
